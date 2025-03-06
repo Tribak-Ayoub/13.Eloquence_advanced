@@ -87,7 +87,10 @@
                             <td>{{ $article->created_at->format('d/m/Y') }}</td>
                             <td>
                                 <a href="{{ route('articles.show', $article->id) }}" class="btn btn-secondary">{{ __('messages.show') }}</a>
+                                @can('edit article')
                                 <a href="{{ route('articles.edit', $article->id) }}" class="btn btn-primary">{{ __('messages.edit') }}</a>
+                                @endcan
+                                @can('delete article')
                                 <form action="{{ route('articles.destroy', $article->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
@@ -95,6 +98,7 @@
                                         {{ __('messages.delete') }}
                                     </button>
                                 </form>
+                                @endcan
                             </td>
                         </tr>
                         @endif

@@ -54,11 +54,13 @@ class ArticleController extends Controller
     $tags = \App\Models\Tag::all();
 
 
-    if (Auth::check() && Auth::user()->roles->contains('name', 'admin')) {
-      return view('admin.article.index', compact('articles', 'categories', 'tags', 'ArticleCount', 'CommentCount', 'UserCount'));
-    } else {
-      return view('public.index', compact('articles', 'categories', 'tags'));
+    if (Auth::check()) {
+      if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor')) {
+        return view('admin.article.index', compact('articles', 'categories', 'tags', 'ArticleCount', 'CommentCount', 'UserCount'));
+      }
     }
+
+    return view('public.index', compact('articles', 'categories', 'tags'));
   }
 
   /**
@@ -66,7 +68,7 @@ class ArticleController extends Controller
    */
   public function create()
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
+    if (!Auth::check() || !Auth::user()->hasRole('admin') || !Auth::user()->hasRole('editor') ) {
       return redirect()->route('articles.index');
     }
 
@@ -81,7 +83,7 @@ class ArticleController extends Controller
    */
   public function store(StoreArticleRequest $request)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
+    if (!Auth::check() || !Auth::user()->hasRole('admin')) {
       return redirect()->route('articles.index');
     }
 
@@ -91,6 +93,7 @@ class ArticleController extends Controller
       'title' => $validated['title'],
       'category_id' => $validated['category'],
       'content' => $validated['content'],
+      'user_id' => Auth::id(),
     ]);
 
     // Attach selected tags
