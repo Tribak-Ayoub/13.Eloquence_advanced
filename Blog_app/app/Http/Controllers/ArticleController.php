@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreArticleRequest;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Comment;
@@ -15,12 +16,12 @@ class ArticleController extends Controller
   /**
    * Display a listing of the resource.
    */
- 
+
   public function index(Request $request)
   {
-    $query = Article::query();
-    
-    $ArticleCount= Article::count();
+    $query = Article::latest();
+
+    $ArticleCount = Article::count();
     $CommentCount = Comment::count();
     $UserCount = User::count();
 
@@ -54,7 +55,7 @@ class ArticleController extends Controller
 
 
     if (Auth::check() && Auth::user()->roles->contains('name', 'admin')) {
-      return view('admin.article.index', compact('articles', 'categories', 'tags','ArticleCount','CommentCount', 'UserCount' ));
+      return view('admin.article.index', compact('articles', 'categories', 'tags', 'ArticleCount', 'CommentCount', 'UserCount'));
     } else {
       return view('public.index', compact('articles', 'categories', 'tags'));
     }
@@ -78,19 +79,13 @@ class ArticleController extends Controller
   /**
    * Store a newly created resource in storage.
    */
-  public function store(Request $request)
+  public function store(StoreArticleRequest $request)
   {
     if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
       return redirect()->route('articles.index');
     }
 
-    $validated = $request->validate([
-      'title' => 'required|string|max:255',
-      'category' => 'required|exists:categories,id',
-      'content' => 'required|string',
-      'tags' => 'array',
-      'tags.*' => 'exists:tags,id',
-    ]);
+    $validated = $request->validated();
 
     $article = Article::create([
       'title' => $validated['title'],
