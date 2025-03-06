@@ -87,7 +87,7 @@
                             <td>{{ $article->created_at->format('d/m/Y') }}</td>
                             <td>
                                 <a href="{{ route('articles.show', $article->id) }}" class="btn btn-secondary">{{ __('messages.show') }}</a>
-                                @can('edit article')
+                                @can('update', $article)
                                 <a href="{{ route('articles.edit', $article->id) }}" class="btn btn-primary">{{ __('messages.edit') }}</a>
                                 @endcan
                                 @can('delete article')

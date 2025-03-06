@@ -68,7 +68,7 @@ class ArticleController extends Controller
    */
   public function create()
   {
-    if (!Auth::check() || !Auth::user()->hasRole('admin') || !Auth::user()->hasRole('editor') ) {
+    if (!Auth::check() || !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
       return redirect()->route('articles.index');
     }
 
@@ -83,7 +83,7 @@ class ArticleController extends Controller
    */
   public function store(StoreArticleRequest $request)
   {
-    if (!Auth::check() || !Auth::user()->hasRole('admin')) {
+    if (!Auth::check() || !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
       return redirect()->route('articles.index');
     }
 
@@ -123,11 +123,12 @@ class ArticleController extends Controller
    */
   public function edit($id)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
+    if (!Auth::check() || !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
       return redirect()->route('articles.index');
     }
 
     $article = Article::findOrFail($id);
+    $this->authorize('update', $article);
     $categories = Category::all();
     $allTags = Tag::all();
     $selectedTags = $article->tags->pluck('id')->toArray();
@@ -140,7 +141,7 @@ class ArticleController extends Controller
    */
   public function update(Request $request, $id)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
+    if (!Auth::check() || !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
       return redirect()->route('articles.index');
     }
 
@@ -153,6 +154,7 @@ class ArticleController extends Controller
     ]);
 
     $article = Article::findOrFail($id);
+    $this->authorize('update', $article);
     $article->update([
       'title' => $validated['title'],
       'category_id' => $validated['category'],
@@ -169,7 +171,7 @@ class ArticleController extends Controller
    */
   public function destroy(string $id)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
+    if (!Auth::check() || !Auth::user()->hasRole('admin')) {
       return redirect()->route('articles.index');
     }
 
