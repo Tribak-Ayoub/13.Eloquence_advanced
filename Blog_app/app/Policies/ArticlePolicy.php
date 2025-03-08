@@ -13,7 +13,7 @@ class ArticlePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasRole('admin') || $user->hasRole('editor');
     }
 
     /**
@@ -29,7 +29,7 @@ class ArticlePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('admin') || $user->hasRole('editor');
     }
 
     /**
@@ -45,7 +45,7 @@ class ArticlePolicy
      */
     public function delete(User $user, Article $article): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
     /**

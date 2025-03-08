@@ -27,7 +27,7 @@ class ArticleService
         if (!empty($filters['search'])) {
             $query->where(function ($query) use ($filters) {
                 $query->where('title', 'like', '%' . $filters['search'] . '%')
-                      ->orWhere('content', 'like', '%' . $filters['search'] . '%');
+                    ->orWhere('content', 'like', '%' . $filters['search'] . '%');
             });
         }
 
@@ -46,25 +46,33 @@ class ArticleService
             'category_id' => $data['category'],
             'content' => $data['content'],
             'user_id' => Auth::id(),
-          ]);
+        ]);
 
-          if (!empty($data['tags'])) {
+        if (!empty($data['tags'])) {
             $article->tags()->attach($data['tags']);
         }
-        
+
         return $article;
     }
 
-    public function updateArticle($id, array $data)
+    public function updateArticle(Article $article, array $data)
     {
-        $article = Article::findOrFail($id);
-        $article->update($data);
+
+        $article->update([
+            'title' => $data['title'],
+            'category_id' => $data['category'],
+            'content' => $data['content'],
+        ]);
+
+        if (isset($data['tags'])) {
+            $article->tags()->sync($data['tags']);
+        }
+
         return $article;
     }
 
-    public function deleteArticle($id)
+    public function deleteArticle(Article $article)
     {
-        $article = Article::findOrFail($id);
         $article->delete();
         return true;
     }

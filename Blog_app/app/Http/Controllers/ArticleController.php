@@ -39,7 +39,7 @@ class ArticleController extends Controller
     $tags = Tag::all();
 
 
-    if (Auth::check() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
+    if ($this->authorize('viewAny', Article::class)) {
       return view('admin.article.index', compact('articles', 'categories', 'tags', 'ArticleCount', 'CommentCount', 'UserCount'));
     }
 
@@ -51,9 +51,7 @@ class ArticleController extends Controller
    */
   public function create()
   {
-    if (!Auth::check() || !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
-      return redirect()->route('articles.index');
-    }
+    $this->authorize('create', Article::class);
 
     $categories = Category::all();
     $allTags = Tag::all();
@@ -66,9 +64,7 @@ class ArticleController extends Controller
    */
   public function store(StoreArticleRequest $request)
   {
-    if (!Auth::check() && !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
-      return redirect()->route('articles.index');
-    }
+    $this->authorize('create', Article::class);
 
     $validated = $request->validated();
 
@@ -98,10 +94,6 @@ class ArticleController extends Controller
    */
   public function edit($id)
   {
-    // if (!Auth::check() || !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
-    //   return redirect()->route('articles.index');
-    // }
-
     $article = Article::findOrFail($id);
     $this->authorize('update', $article);
     $categories = Category::all();
@@ -116,28 +108,10 @@ class ArticleController extends Controller
    */
   public function update(StoreArticleRequest $request, $id)
   {
-    if (!Auth::check() || !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
-      return redirect()->route('articles.index');
-    }
     $validated = $request->validated();
-
-    // $validated = $request->validate([
-    //   'title' => 'required|string|max:255',
-    //   'category' => 'required|exists:categories,id',
-    //   'content' => 'required|string',
-    //   'tags' => 'array',
-    //   'tags.*' => 'exists:tags,id',
-    // ]);
-
     $article = Article::findOrFail($id);
     $this->authorize('update', $article);
-    $article->update([
-      'title' => $validated['title'],
-      'category_id' => $validated['category'],
-      'content' => $validated['content'],
-    ]);
-
-    $article->tags()->sync($validated['tags'] ?? []);
+    $article = $this->articleService->updateArticle($article, $validated);
 
     return redirect()->route('articles.index')->with('success', 'L\'article a bien été modifié');
   }
@@ -147,12 +121,11 @@ class ArticleController extends Controller
    */
   public function destroy(string $id)
   {
-    if (!Auth::check() || !Auth::user()->hasRole('admin')) {
-      return redirect()->route('articles.index');
-    }
+    $article = Article::findOrFail($id);
+    $this->authorize('delete', $article);
 
-    $article = Article::where('id', $id);
-    $article->delete();
+    $article = $this->articleService->deleteArticle($article);
+    
     return redirect()->route('articles.index')->with('success', 'L\'article a bien été supprimé');
   }
 }
