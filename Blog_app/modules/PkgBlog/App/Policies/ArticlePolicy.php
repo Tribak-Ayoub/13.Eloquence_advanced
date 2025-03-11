@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Policies;
+namespace Modules\PkgBlog\App\Policies;
 
-use App\Models\Article;
+
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use Modules\PkgBlog\Models\Article;
 
 class ArticlePolicy
 {

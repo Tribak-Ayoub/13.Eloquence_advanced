@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Modules\PkgBlog\Database\Seeders\ArticleSeeder;
+use Modules\PkgBlog\Database\Seeders\ArticleTagSeeder;
+use Modules\PkgBlog\Database\Seeders\CategorySeeder;
+use Modules\PkgBlog\Database\Seeders\TagSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,9 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-
         $this->call([
             PermissionsSeeder::class,
             RoleSeeder::class,
@@ -28,9 +27,13 @@ class DatabaseSeeder extends Seeder
             ArticleTagSeeder::class,
         ]);
 
+        // Run module-specific seeders
         $this->runModuleSeeders();
     }
 
+    /**
+     * Dynamically loads and runs all module seeders.
+     */
     protected function runModuleSeeders(): void
     {
         $modulesPath = base_path('modules');
@@ -41,11 +44,20 @@ class DatabaseSeeder extends Seeder
                 continue;
             }
 
-            $seederFile = $module . '/Database/Seeders/' . Str::studly(basename($module)) . 'Seeder.php';
+            $seederDirectory = $module . '/Database/Seeders';
 
-            if (File::exists($seederFile)) {
-                $seederClass = 'Modules\\' . Str::studly(basename($module)) . '\\Database\\Seeders\\' . Str::studly(basename($module)) . 'Seeder';
-                $this->call($seederClass);
+            if (!File::exists($seederDirectory)) {
+                continue;
+            }
+
+            $seederFiles = File::files($seederDirectory);
+
+            foreach ($seederFiles as $file) {
+                $seederClass = 'Modules\\' . Str::studly(basename($module)) . '\\Database\\Seeders\\' . pathinfo($file, PATHINFO_FILENAME);
+
+                if (class_exists($seederClass)) {
+                    $this->call($seederClass);
+                }
             }
         }
     }

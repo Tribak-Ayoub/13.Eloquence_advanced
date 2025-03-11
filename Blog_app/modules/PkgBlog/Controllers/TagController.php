@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\PkgBlog\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Tag;
+use Modules\Core\Controllers\BaseController;
+use Modules\PkgBlog\Models\Tag;
 
-class TagController extends Controller
+class TagController extends BaseController
 {
   /**
    * Display a listing of the resource.

@@ -1,15 +1,17 @@
 <?php
 
-namespace Database\Factories;
+namespace Modules\PkgBlog\Database\Factories;
 
-use App\Models\Article;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Modules\PkgBlog\Models\Article;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Article>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Modules\PkgBlog\Models\Article>
  */
+
 class ArticleFactory extends Factory
 {
+    protected $model = Article::class;
     /**
      * Define the model's default state.
      *

@@ -1,14 +1,16 @@
 <?php
 
-namespace Database\Factories;
+namespace Modules\PkgBlog\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Modules\PkgBlog\Models\Category;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Tag>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Modules\PkgBlog\Models\Category>
  */
-class TagFactory extends Factory
+class CategoryFactory extends Factory
 {
+    protected $model = Category::class;
     /**
      * Define the model's default state.
      *

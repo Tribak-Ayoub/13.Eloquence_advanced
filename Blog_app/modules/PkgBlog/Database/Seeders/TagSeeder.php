@@ -1,10 +1,10 @@
 <?php
 
-namespace Database\Seeders;
+namespace Modules\PkgBlog\Database\Seeders;
 
-use App\Models\Tag;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\PkgBlog\Models\Tag;
 
 class TagSeeder extends Seeder
 {
@@ -13,7 +13,6 @@ class TagSeeder extends Seeder
      */
     public function run(): void
     {
-        //
         Tag::factory()->count(10)->create();
     }
 }

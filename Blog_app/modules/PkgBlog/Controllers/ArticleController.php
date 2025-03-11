@@ -1,19 +1,22 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\PkgBlog\Controllers;
 
-use App\Http\Requests\StoreArticleRequest;
-use App\Models\Article;
-use App\Models\Category;
-use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Tag;
 use App\Models\User;
-use App\Services\ArticleService;
+use Modules\Core\Controllers\BaseController;
+use Modules\PkgBlog\App\Requests\StoreArticleRequest;
+use Modules\PkgBlog\Models\Article;
+use Modules\PkgBlog\Models\Category;
+use Modules\PkgBlog\Models\Comment;
+use Modules\PkgBlog\Models\Tag;
+use Modules\PkgBlog\Services\ArticleService;
+// use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-class ArticleController extends Controller
+class ArticleController extends BaseController
 {
+  // use AuthorizesRequests;
   protected $articleService;
 
   public function __construct(ArticleService $articleService)

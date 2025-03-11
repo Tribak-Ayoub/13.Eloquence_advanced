@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\PkgBlog\Controllers;
 
-use App\Models\Comment;
 use Illuminate\Http\Request;
+use Modules\Core\Controllers\BaseController;
+use Modules\PkgBlog\Models\Comment;
 
-class CommentController extends Controller
+class CommentController extends BaseController
 {
     /**
      * Display a listing of the resource.

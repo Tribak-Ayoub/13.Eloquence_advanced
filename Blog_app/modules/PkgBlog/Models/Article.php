@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace Modules\PkgBlog\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Testing\Fluent\Concerns\Has;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Category;
+
 
 class Article extends Model
 {

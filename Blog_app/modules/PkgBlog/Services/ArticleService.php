@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services;
+namespace Modules\PkgBlog\Services;
 
-use App\Models\Article;
 use Illuminate\Support\Facades\Auth;
+use Modules\PkgBlog\Models\Article;
 
 class ArticleService
 {

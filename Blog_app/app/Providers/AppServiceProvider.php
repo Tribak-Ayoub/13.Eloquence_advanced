@@ -9,10 +9,6 @@ use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
-    protected $policies = [
-        Article::class => ArticlePolicy::class,
-    ];
-
     /**
      * Register any application services.
      */
