@@ -1,96 +1,202 @@
-# Article Policies in Laravel
+# Laravel Modular System with Blade - Blog Module CRUD Example
 
-This project uses Laravel Policies to handle authorization for managing articles. Policies ensure that only authorized users can perform specific actions on articles.
+## **1. Introduction**
+This tutorial will guide you through setting up a modular Laravel system using Blade, focusing on the Blog module. We'll implement a full CRUD system for articles, including comments and tags.
 
-## Policy Overview
+## **2. Setting Up the Modular System**
 
-The `ArticlePolicy` is responsible for defining the authorization logic for the `Article` model. The policy is registered in `AuthServiceProvider` and is automatically applied using Laravel's `authorize` method or `@can` Blade directives.
+### **2.1. Creating the `modules/` Directory**
+Run the following command to create a directory for modules:
+```bash
+mkdir modules
+```
 
-### Policy Methods
+### **2.2. Autoloading Modules in `composer.json`**
+Modify `composer.json` to recognize the `modules/` directory:
+```json
+"autoload": {
+    "psr-4": {
+        "App\\": "app/",
+        "Modules\\": "modules/"
+    }
+}
+```
+Then run:
+```bash
+composer dump-autoload
+```
 
-The `ArticlePolicy` includes the following methods:
+## **3. Blog Module Structure**
+The Blog module will have the following structure:
+```
+/modules
+  /Blog
+    /App
+      /Controllers
+      /Models
+      /Requests
+      /Services
+    /Database
+      /Migrations
+      /Seeders
+    /Resources
+      /Views
+    /Routes
+```
 
-- **viewAny(User $user): bool**  
-  Determines whether the user can view any articles.
-  ```php
-  public function viewAny(User $user): bool
-  {
-      return false;
-  }
-  ```
+## **4. Creating the Blog Module**
 
-- **view(User $user, Article $article): bool**  
-  Determines whether the user can view a specific article.
-  ```php
-  public function view(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
+### **4.1. Creating the Module Structure**
+```bash
+mkdir -p modules/Blog/App/Controllers
+mkdir -p modules/Blog/App/Models
+mkdir -p modules/Blog/App/Requests
+mkdir -p modules/Blog/App/Services
+mkdir -p modules/Blog/Database/Migrations
+mkdir -p modules/Blog/Database/Seeders
+mkdir -p modules/Blog/Resources/Views
+mkdir -p modules/Blog/Routes
+```
 
-- **create(User $user): bool**  
-  Determines whether the user can create articles.
-  ```php
-  public function create(User $user): bool
-  {
-      return false;
-  }
-  ```
-
-- **update(User $user, Article $article): bool**  
-  Ensures that only the owner of an article can edit it.
-  ```php
-  public function update(User $user, Article $article): bool
-  {
-      return $user->id === $article->user_id;
-  }
-  ```
-
-- **delete(User $user, Article $article): bool**  
-  Restricts article deletion.
-  ```php
-  public function delete(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
-
-- **restore(User $user, Article $article): bool**  
-  Prevents article restoration.
-  ```php
-  public function restore(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
-
-- **forceDelete(User $user, Article $article): bool**  
-  Prevents permanent deletion.
-  ```php
-  public function forceDelete(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
-
-## Applying Policies in Controllers
-
-In controllers, policies are applied using:
+### **4.2. Registering the Blog Module Service Provider**
+Create `modules/Blog/App/Providers/BlogServiceProvider.php`:
 ```php
-$this->authorize('update', $article);
+namespace Modules\Blog\App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+class BlogServiceProvider extends ServiceProvider
+{
+    public function register()
+    {
+        $this->loadRoutesFrom(base_path('modules/Blog/Routes/web.php'));
+        $this->loadViewsFrom(base_path('modules/Blog/Resources/Views'), 'blog');
+    }
+}
 ```
-This ensures that only the article owner can update it.
 
-## Applying Policies in Blade Views
+### **4.3. Loading Module Providers in `AppServiceProvider`**
+Modify `AppServiceProvider.php` to load module providers:
+```php
+$this->app->register(\Modules\Blog\App\Providers\BlogServiceProvider::class);
+```
 
-In Blade templates, the `@can` directive is used to conditionally show UI elements:
+## **5. Creating the Article CRUD System**
+
+### **5.1. Creating the Model**
+Create `modules/Blog/App/Models/Article.php`:
+```php
+namespace Modules\Blog\App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Article extends Model
+{
+    protected $fillable = ['title', 'content'];
+}
+```
+
+### **5.2. Creating the Migration**
+Run the command:
+```bash
+php artisan make:migration create_articles_table --path=modules/Blog/Database/Migrations
+```
+Then edit the migration file:
+```php
+Schema::create('articles', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->text('content');
+    $table->timestamps();
+});
+```
+Run migrations:
+```bash
+php artisan migrate --path=modules/Blog/Database/Migrations
+```
+
+### **5.3. Creating the Controller**
+Create `modules/Blog/App/Controllers/ArticleController.php`:
+```php
+namespace Modules\Blog\App\Controllers;
+
+use Illuminate\Http\Request;
+use Modules\Blog\App\Models\Article;
+use Illuminate\Routing\Controller;
+
+class ArticleController extends Controller
+{
+    public function index()
+    {
+        $articles = Article::all();
+        return view('blog::articles.index', compact('articles'));
+    }
+
+    public function create()
+    {
+        return view('blog::articles.create');
+    }
+
+    public function store(Request $request)
+    {
+        Article::create($request->all());
+        return redirect()->route('blog.articles.index');
+    }
+
+    public function edit(Article $article)
+    {
+        return view('blog::articles.edit', compact('article'));
+    }
+
+    public function update(Request $request, Article $article)
+    {
+        $article->update($request->all());
+        return redirect()->route('blog.articles.index');
+    }
+
+    public function destroy(Article $article)
+    {
+        $article->delete();
+        return redirect()->route('blog.articles.index');
+    }
+}
+```
+
+### **5.4. Defining Routes**
+Create `modules/Blog/Routes/web.php`:
+```php
+use Modules\Blog\App\Controllers\ArticleController;
+
+Route::prefix('blog')->name('blog.')->group(function() {
+    Route::resource('articles', ArticleController::class);
+});
+```
+
+### **5.5. Creating Views**
+Create `modules/Blog/Resources/Views/articles/index.blade.php`:
 ```blade
-@can('update', $article)
-    <a href="{{ route('articles.edit', $article->id) }}" class="btn btn-primary">Edit</a>
-@endcan
+@extends('layouts.app')
+
+@section('content')
+    <a href="{{ route('blog.articles.create') }}">Create Article</a>
+    <ul>
+        @foreach ($articles as $article)
+            <li>{{ $article->title }}
+                <a href="{{ route('blog.articles.edit', $article) }}">Edit</a>
+                <form action="{{ route('blog.articles.destroy', $article) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        @endforeach
+    </ul>
+@endsection
 ```
 
-## Conclusion
-
-Laravel policies provide a clean way to handle authorization logic, ensuring users can only modify their own articles while restricting access to other users.
-
+## **6. Running the Application**
+Start the server:
+```bash
+php artisan serve
+```
+Visit `http://localhost:8000/blog/articles` to see your articles CRUD in action.
