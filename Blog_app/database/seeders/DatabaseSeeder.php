@@ -5,6 +5,12 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Modules\PkgBlog\Database\Seeders\ArticleSeeder;
+use Modules\PkgBlog\Database\Seeders\ArticleTagSeeder;
+use Modules\PkgBlog\Database\Seeders\CategorySeeder;
+use Modules\PkgBlog\Database\Seeders\TagSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,4 +32,5 @@ class DatabaseSeeder extends Seeder
             ArticleTagSeeder::class,
         ]);
     }
+    
 }
