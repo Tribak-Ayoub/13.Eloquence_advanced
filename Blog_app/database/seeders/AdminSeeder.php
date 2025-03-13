@@ -20,6 +20,13 @@ class AdminSeeder extends Seeder
             'password' => 'password']);
         $user->assignRole('admin');
 
+        $editor = User::create([
+            'name' => 'Editor',
+            'email' => 'editor@gmail.com',
+            'password' => 'password'
+        ]);
+        $editor->assignRole('editor');
+
        
     }
 }
