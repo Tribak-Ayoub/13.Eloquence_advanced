@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Imports;
+namespace Modules\PkgBlog\App\Imports;
 
-use App\Models\Article;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Modules\PkgBlog\App\Models\Article;
 
 class ArticlesImport implements ToModel
 {
@@ -15,7 +15,8 @@ class ArticlesImport implements ToModel
     public function model(array $row)
     {
         return new Article([
-            //
+            'title' => $row['title'],
+            'content' => $row['content'],
         ]);
     }
 }
