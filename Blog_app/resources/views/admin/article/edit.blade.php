@@ -13,6 +13,17 @@
           <form method="POST" action="{{ route('articles.update', $article->id) }}">
             @method('PUT')
             @csrf
+            
+            {{-- Display Validation Errors --}}
+            @if ($errors->any())
+            <div class="alert alert-danger">
+              <ul>
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+            @endif
 
             {{-- Titre --}}
             <div class="mb-3">
@@ -36,10 +47,10 @@
                 id="category"
                 required>
                 @foreach($categories as $category)
-                  <option value="{{ $category->id }}"
-                    {{ $article->category_id == $category->id ? 'selected' : '' }}>
-                    {{ $category->name }}
-                  </option>
+                <option value="{{ $category->id }}"
+                  {{ $article->category_id == $category->id ? 'selected' : '' }}>
+                  {{ $category->name }}
+                </option>
                 @endforeach
               </select>
             </div>
@@ -53,10 +64,10 @@
                 class="form-select"
                 multiple>
                 @foreach($allTags as $tag)
-                  <option value="{{ $tag->id }}"
-                    {{ in_array($tag->id, $selectedTags) ? 'selected' : '' }}>
-                    {{ $tag->name }}
-                  </option>
+                <option value="{{ $tag->id }}"
+                  {{ in_array($tag->id, $selectedTags) ? 'selected' : '' }}>
+                  {{ $tag->name }}
+                </option>
                 @endforeach
               </select>
             </div>
@@ -67,7 +78,7 @@
               <textarea
                 name="content"
                 class="form-control"
-                id="summernote"
+                id="content"
                 rows="5"
                 placeholder="Contenu de l'article"
                 required>{{ old('content', $article->content) }}</textarea>
@@ -87,15 +98,5 @@
 </div>
 
 <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.18/summernote-bs4.min.js"></script>
-<script>
-  $(document).ready(function() {
-    $('#summernote').summernote({
-      placeholder: 'Rédigé votre article ici...',
-      tabsize: 2,
-      height: 200
-    });
-  });
-</script>
+<script src="//cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 @endsection

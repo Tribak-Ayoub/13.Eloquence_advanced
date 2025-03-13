@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreArticleRequest;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Comment;
@@ -9,55 +10,40 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Tag;
 use App\Models\User;
+use App\Services\ArticleService;
 
 class ArticleController extends Controller
 {
-  /**
-   * Display a listing of the resource.
-   */
- 
+  protected $articleService;
+
+  public function __construct(ArticleService $articleService)
+  {
+    $this->articleService = $articleService;
+  }
+
   public function index(Request $request)
   {
-    $query = Article::query();
-    
-    $ArticleCount= Article::count();
+    $filters = [
+      'category' => $request->category,
+      'tag' => $request->tag,
+      'search' => $request->search,
+    ];
+
+    $articles = $this->articleService->paginate($filters);
+
+    $ArticleCount = Article::count();
     $CommentCount = Comment::count();
     $UserCount = User::count();
 
-    // Filtrer par catégorie
-    if ($request->has('category') && $request->category != '') {
-      $query->where('category_id', $request->category);
+    $categories = Category::all();
+    $tags = Tag::all();
+
+
+    if ($this->authorize('viewAny', Article::class)) {
+      return view('admin.article.index', compact('articles', 'categories', 'tags', 'ArticleCount', 'CommentCount', 'UserCount'));
     }
 
-    // Filtrer par tag
-    if ($request->has('tag') && $request->tag != '') {
-      $query->whereHas('tags', function ($query) use ($request) {
-        $query->where('tags.id', $request->tag);
-      });
-    }
-
-    // Filtrer par recherche dans le titre ou le contenu
-    if ($request->has('search') && $request->search != '') {
-      $query->where(function ($query) use ($request) {
-        $query->where('title', 'like', '%' . $request->search . '%')
-          ->orWhere('content', 'like', '%' . $request->search . '%');
-      });
-    }
-
-    // Paginer les résultats
-    $articles = $query->paginate(10);
-
-    // Ajouter les paramètres de filtrage à la pagination
-    $articles->appends($request->all());
-    $categories = \App\Models\Category::all();
-    $tags = \App\Models\Tag::all();
-
-
-    if (Auth::check() && Auth::user()->roles->contains('name', 'admin')) {
-      return view('admin.article.index', compact('articles', 'categories', 'tags','ArticleCount','CommentCount', 'UserCount' ));
-    } else {
-      return view('public.index', compact('articles', 'categories', 'tags'));
-    }
+    return view('public.index', compact('articles', 'categories', 'tags'));
   }
 
   /**
@@ -65,9 +51,7 @@ class ArticleController extends Controller
    */
   public function create()
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
-      return redirect()->route('articles.index');
-    }
+    $this->authorize('create', Article::class);
 
     $categories = Category::all();
     $allTags = Tag::all();
@@ -78,28 +62,13 @@ class ArticleController extends Controller
   /**
    * Store a newly created resource in storage.
    */
-  public function store(Request $request)
+  public function store(StoreArticleRequest $request)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
-      return redirect()->route('articles.index');
-    }
+    $this->authorize('create', Article::class);
 
-    $validated = $request->validate([
-      'title' => 'required|string|max:255',
-      'category' => 'required|exists:categories,id',
-      'content' => 'required|string',
-      'tags' => 'array',
-      'tags.*' => 'exists:tags,id',
-    ]);
+    $validated = $request->validated();
 
-    $article = Article::create([
-      'title' => $validated['title'],
-      'category_id' => $validated['category'],
-      'content' => $validated['content'],
-    ]);
-
-    // Attach selected tags
-    $article->tags()->attach($validated['tags'] ?? []);
+    $article = $this->articleService->createArticle($validated);
 
     return redirect()->route('articles.index')->with('success', 'L\'article a bien été créé');
   }
@@ -109,11 +78,11 @@ class ArticleController extends Controller
    */
   public function show(string $id)
   {
-    $article = Article::with(['category', 'tags', 'comments'])->findOrFail($id);
+    $article = $this->articleService->getArticleById($id);
     $commentableId = $article->id;
-    $commentableType = Article::class;
+    $commentableType = Article::class; // This is directly calculated in the controller.
 
-    if (Auth::check() && Auth::user()->roles->contains('name', 'admin')) {
+    if (Auth::check() && !(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
       return view('admin.article.show', compact('article', 'commentableId', 'commentableType'));
     } else {
       return view('public.show', compact('article', 'commentableId', 'commentableType'));
@@ -125,11 +94,8 @@ class ArticleController extends Controller
    */
   public function edit($id)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
-      return redirect()->route('articles.index');
-    }
-
     $article = Article::findOrFail($id);
+    $this->authorize('update', $article);
     $categories = Category::all();
     $allTags = Tag::all();
     $selectedTags = $article->tags->pluck('id')->toArray();
@@ -140,28 +106,12 @@ class ArticleController extends Controller
   /**
    * Update the specified resource in storage.
    */
-  public function update(Request $request, $id)
+  public function update(StoreArticleRequest $request, $id)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
-      return redirect()->route('articles.index');
-    }
-
-    $validated = $request->validate([
-      'title' => 'required|string|max:255',
-      'category' => 'required|exists:categories,id',
-      'content' => 'required|string',
-      'tags' => 'array',
-      'tags.*' => 'exists:tags,id',
-    ]);
-
+    $validated = $request->validated();
     $article = Article::findOrFail($id);
-    $article->update([
-      'title' => $validated['title'],
-      'category_id' => $validated['category'],
-      'content' => $validated['content'],
-    ]);
-
-    $article->tags()->sync($validated['tags'] ?? []);
+    $this->authorize('update', $article);
+    $article = $this->articleService->updateArticle($article, $validated);
 
     return redirect()->route('articles.index')->with('success', 'L\'article a bien été modifié');
   }
@@ -171,12 +121,11 @@ class ArticleController extends Controller
    */
   public function destroy(string $id)
   {
-    if (!Auth::check() || !Auth::user()->roles->contains('name', 'admin')) {
-      return redirect()->route('articles.index');
-    }
+    $article = Article::findOrFail($id);
+    $this->authorize('delete', $article);
 
-    $article = Article::where('id', $id);
-    $article->delete();
+    $article = $this->articleService->deleteArticle($article);
+    
     return redirect()->route('articles.index')->with('success', 'L\'article a bien été supprimé');
   }
 }
