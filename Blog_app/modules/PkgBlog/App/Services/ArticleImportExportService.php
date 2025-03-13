@@ -25,6 +25,10 @@ class ArticleImportExportService
         // Get the uploaded file
         $file = $request->file('file');
 
+        if (!$file) {
+            return back()->with('error', 'No file uploaded.');
+        }
+
         // Import the data using the ArticlesImport class
         Excel::import(new ArticlesImport, $file);
     }
