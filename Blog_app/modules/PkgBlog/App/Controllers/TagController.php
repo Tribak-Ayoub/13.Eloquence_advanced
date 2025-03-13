@@ -50,7 +50,7 @@ class TagController extends BaseController
         $tag->save();
 
         // Redirect with success message
-        return redirect()->route('blog.tags.index')->with('success', 'Le tag a bien été créé.');
+        return redirect()->route('tags.index')->with('success', 'Le tag a bien été créé.');
     }
 
     /**
@@ -89,7 +89,7 @@ class TagController extends BaseController
         $tag->save();
 
         // Redirect with success message
-        return redirect()->route('blog.tags.index')->with('success', 'Le tag a bien été mis à jour.');
+        return redirect()->route('tags.index')->with('success', 'Le tag a bien été mis à jour.');
     }
 
     /**
@@ -102,6 +102,6 @@ class TagController extends BaseController
         $tag->delete();
 
         // Redirect with success message
-        return redirect()->route('blog.tags.index')->with('success', 'Le tag a bien été supprimé.');
+        return redirect()->route('tags.index')->with('success', 'Le tag a bien été supprimé.');
     }
 }

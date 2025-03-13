@@ -62,7 +62,7 @@ class ArticleController extends BaseController
         $validated = $request->validated();
         $this->articleService->createArticle($validated);
 
-        return redirect()->route('blog.articles.index')->with('success', 'L\'article a bien été créé');
+        return redirect()->route('articles.index')->with('success', 'L\'article a bien été créé');
     }
 
     public function show(string $id)
@@ -96,7 +96,7 @@ class ArticleController extends BaseController
         $this->authorize('update', $article);
         $this->articleService->updateArticle($article, $validated);
 
-        return redirect()->route('blog.articles.index')->with('success', 'L\'article a bien été modifié');
+        return redirect()->route('articles.index')->with('success', 'L\'article a bien été modifié');
     }
 
     public function destroy(string $id)
@@ -105,6 +105,6 @@ class ArticleController extends BaseController
         $this->authorize('delete', $article);
         $this->articleService->deleteArticle($article);
 
-        return redirect()->route('blog.articles.index')->with('success', 'L\'article a bien été supprimé');
+        return redirect()->route('articles.index')->with('success', 'L\'article a bien été supprimé');
     }
 }
