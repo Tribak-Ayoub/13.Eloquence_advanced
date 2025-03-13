@@ -63,12 +63,12 @@
         </nav>
 
         <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-            <div class="sidebar-brand"> <a href="{{ route('articles.index') }}" class="brand-link"><i class="fa-solid fa-blog"></i> <span class="brand-text fw-light">BLOG</span> </a> </div>
+            <div class="sidebar-brand"> <a href="{{ route('blog.articles.index') }}" class="brand-link"><i class="fa-solid fa-blog"></i> <span class="brand-text fw-light">BLOG</span> </a> </div>
             <div class="sidebar-wrapper">
                 <nav class="mt-2">
                     <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
                         <li class="nav-item"> 
-                            <a href="{{ route('articles.index') }}" class="nav-link"> 
+                            <a href="{{ route('blog.articles.index') }}" class="nav-link"> 
                             <i class="fa-solid fa-newspaper"></i>
                                 <p>Dashboard</p>
                             </a> 
@@ -80,7 +80,7 @@
                             </a> 
                         </li>
                         <li class="nav-item"> 
-                            <a href="{{ route('tags.index') }}" class="nav-link"> 
+                            <a href="{{ route('blog.tags.index') }}" class="nav-link"> 
                             <i class="fa-solid fa-tags"></i>
                                 <p>Tags</p>
                             </a> 

@@ -23,7 +23,7 @@ class TagController extends BaseController
 
         // Paginate the tags
         $tags = $query->paginate(10);
-        return view('pkg-blog::admin.tag.index', compact('tags'));
+        return view('blog::admin.tag.index', compact('tags'));
     }
 
     /**
@@ -31,7 +31,7 @@ class TagController extends BaseController
      */
     public function create()
     {
-        return view('pkg-blog::admin.tag.create');
+        return view('blog::admin.tag.create');
     }
 
     /**
@@ -50,7 +50,7 @@ class TagController extends BaseController
         $tag->save();
 
         // Redirect with success message
-        return redirect()->route('tags.index')->with('success', 'Le tag a bien été créé.');
+        return redirect()->route('blog.tags.index')->with('success', 'Le tag a bien été créé.');
     }
 
     /**
@@ -60,7 +60,7 @@ class TagController extends BaseController
     {
         // Show the tag details if needed (optional for now)
         $tag = Tag::findOrFail($id);
-        return view('pkg-blog::admin.tag.show', compact('tag'));
+        return view('blog::admin.tag.show', compact('tag'));
     }
 
     /**
@@ -70,7 +70,7 @@ class TagController extends BaseController
     {
         // Fetch the tag to edit
         $tag = Tag::findOrFail($id);
-        return view('pkg-blog::admin.tag.edit', compact('tag'));
+        return view('blog::admin.tag.edit', compact('tag'));
     }
 
     /**
@@ -89,7 +89,7 @@ class TagController extends BaseController
         $tag->save();
 
         // Redirect with success message
-        return redirect()->route('tags.index')->with('success', 'Le tag a bien été mis à jour.');
+        return redirect()->route('blog.tags.index')->with('success', 'Le tag a bien été mis à jour.');
     }
 
     /**
@@ -102,6 +102,6 @@ class TagController extends BaseController
         $tag->delete();
 
         // Redirect with success message
-        return redirect()->route('tags.index')->with('success', 'Le tag a bien été supprimé.');
+        return redirect()->route('blog.tags.index')->with('success', 'Le tag a bien été supprimé.');
     }
 }

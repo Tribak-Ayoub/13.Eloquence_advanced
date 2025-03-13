@@ -25,7 +25,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/';
+    protected $redirectTo = '/blog/articles';
 
     /**
      * Create a new controller instance.
@@ -36,5 +36,11 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
+    }
+
+    
+    protected function authenticated(Request $request, $user)
+    {
+        dd('Redirecting to:', redirect()->intended()->getTargetUrl());
     }
 }
