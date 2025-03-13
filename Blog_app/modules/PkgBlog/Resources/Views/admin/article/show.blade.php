@@ -59,18 +59,18 @@
             <!-- Action Buttons -->
             <div class="mt-5 d-flex justify-content-between">
                 <!-- Back to Articles Button -->
-                <form action="{{ route('blog.articles.index') }}" method="GET">
+                <form action="{{ route('Blog\articles.index') }}" method="GET">
                     <button type="submit" class="btn btn-secondary">Retour aux articles</button>
                 </form>
 
                 <div>
                     <!-- Edit Article Button -->
-                    <form action="{{ route('blog.articles.edit', $article->id) }}" method="GET" class="d-inline">
+                    <form action="{{ route('Blog\articles.edit', $article->id) }}" method="GET" class="d-inline">
                         <button type="submit" class="btn btn-primary">Modifier</button>
                     </form>
 
                     <!-- Delete Article Button -->
-                    <form action="{{ route('blog.articles.destroy', $article->id) }}" method="POST" class="d-inline">
+                    <form action="{{ route('Blog\articles.destroy', $article->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Supprimer</button>
@@ -89,7 +89,7 @@
 
                     <!-- Add Comment -->
                     <div class="form-outline mb-4">
-                        <form action="{{ route('blog.comments.store') }}" method="POST" class="d-inline">
+                        <form action="{{ route('Blog\comments.store') }}" method="POST" class="d-inline">
                             @csrf
                             <input type="hidden" name="commentable_id" value="{{ $article->id }}">
                             <input type="hidden" name="commentable_type" value="Modules\PkgBlog\App\Models\Article">
@@ -108,7 +108,7 @@
                                     <p class="small mb-0 ms-2">{{ $comment->user->name ?? 'Auteur Anonyme' }}</p>
                                 </div>
                                 <div class="d-flex align-items-center text-body">
-                                    <form action="{{ route('blog.comments.destroy', $comment->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('Blog\comments.destroy', $comment->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger">Supprimer</button>

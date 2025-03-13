@@ -58,7 +58,7 @@
 
         <!-- Buttons -->
         <div class="mt-8 flex justify-between space-x-6">
-            <form action="{{ route('blog.public.index') }}" method="GET" class="inline">
+            <form action="{{ route('public.index') }}" method="GET" class="inline">
                 <button type="submit" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">
                     Retour aux articles
                 </button>
@@ -76,7 +76,7 @@
                     <h2 class="text-3xl font-semibold text-gray-800 text-center">Commentaires</h2>
 
                     @if(Auth::check())
-                    <form action="{{ route('blog.comments.store') }}" method="POST" class="inline">
+                    <form action="{{ route('comments.store') }}" method="POST" class="inline">
                         @csrf
                         <input type="hidden" name="commentable_id" value="{{ $article->id }}">
                         <input type="hidden" name="commentable_type" value="article">

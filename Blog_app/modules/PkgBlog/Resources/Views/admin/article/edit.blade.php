@@ -10,7 +10,7 @@
         </div>
 
         <div class="card-body">
-          <form method="POST" action="{{ route('blog.articles.update', $article->id) }}">
+          <form method="POST" action="{{ route('articles.update', $article->id) }}">
             @method('PUT')
             @csrf
             
@@ -86,7 +86,7 @@
 
             {{-- Boutons d'action --}}
             <div class="mt-5 d-flex justify-content-between">
-              <a href="{{ route('blog.articles.index') }}" class="btn btn-secondary">Retour aux articles</a>
+              <a href="{{ route('articles.index') }}" class="btn btn-secondary">Retour aux articles</a>
               <button type="submit" class="btn btn-primary px-4">Modifier</button>
             </div>
 

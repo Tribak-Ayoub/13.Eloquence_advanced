@@ -6,7 +6,7 @@
   <div class="card">
       <div class="card-header d-flex pb-0 pt-3">
       <!-- input search --> 
-      <form method="GET" action="{{ route('blog.categories.index') }}" class="d-flex mb-3 ">
+      <form method="GET" action="{{ route('categories.index') }}" class="d-flex mb-3 ">
                     <div class="form-group  ">
                         <input type="text" name="search" id="search" class="form-control " value="{{ request('search') }}" placeholder="Rechercher un article">
                     </div>
@@ -17,7 +17,7 @@
       </div>
     <div class="d-flex justify-content-between mx-3 mt-3">
      <h3 class="card-title my-0">Liste des Catégories</h3>
-     <a href="{{route('blog.categories.create')}}" class="btn btn-success">Ajouter une catégorie</a>  
+     <a href="{{route('categories.create')}}" class="btn btn-success">Ajouter une catégorie</a>  
     </div>
     <div class="card-body">
         @if(session('success'))
@@ -40,7 +40,7 @@
                   <td>{{ $category->id }}</td>
                   <td>{{ $category->name }}</td>
                   <td>
-                    <form action="{{ route('blog.categories.destroy', $category->id) }}" method="POST" style="display:inline;">
+                    <form action="{{ route('categories.destroy', $category->id) }}" method="POST" style="display:inline;">
                       @csrf
                       @method('DELETE')
                       <button type="submit" class="btn btn-danger">Supprimer</button>

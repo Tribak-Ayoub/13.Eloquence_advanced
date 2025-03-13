@@ -20,10 +20,11 @@ class ArticleController extends BaseController
     public function __construct(ArticleService $articleService)
     {
         $this->articleService = $articleService;
+        $this->middleware('auth');
     }
 
     public function index(Request $request)
-    {
+    {   
         $filters = [
             'category' => $request->category,
             'tag' => $request->tag,
@@ -37,7 +38,7 @@ class ArticleController extends BaseController
         $categories = Category::all();
         $tags = Tag::all();
 
-        if (Auth::check() && Auth::user()->hasRole('admin')) {
+        if (Auth::check() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))) {
             return view('blog::admin.article.index', compact('articles', 'categories', 'tags', 'ArticleCount', 'CommentCount', 'UserCount'));
         }
 

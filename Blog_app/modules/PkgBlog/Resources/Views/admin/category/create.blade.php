@@ -11,7 +11,7 @@
         </div>
 
         <div class="card-body">
-          <form method="POST" action="{{ route('blog.categories.store') }}">
+          <form method="POST" action="{{ route('categories.store') }}">
             @csrf
             <div class="mb-3">
               <label for="name" class="form-label">Nom</label>

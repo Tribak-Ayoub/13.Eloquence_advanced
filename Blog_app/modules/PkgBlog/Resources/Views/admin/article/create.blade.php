@@ -10,7 +10,7 @@
         </div>
 
         <div class="card-body">
-          <form method="POST" action="{{ route('blog.articles.store') }}">
+          <form method="POST" action="{{ route('articles.store') }}">
             @csrf
             
             {{-- Display Validation Errors --}}
@@ -66,7 +66,7 @@
 
             {{-- Boutons --}}
             <div class="text-center">
-              <a href="{{ route('blog.articles.index') }}" class="btn btn-secondary">Retour</a>
+              <a href="{{ route('articles.index') }}" class="btn btn-secondary">Retour</a>
               <button type="submit" class="btn btn-success px-4">Ajouter</button>
             </div>
           </form>

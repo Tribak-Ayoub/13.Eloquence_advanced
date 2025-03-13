@@ -13,7 +13,7 @@
     <div class="card">
         <div class="card-header d-flex pb-0 pt-3">
             <!-- input search --> 
-            <form method="GET" action="{{ route('blog.articles.index') }}" class="d-flex mb-3 ">
+            <form method="GET" action="{{ route('articles.index') }}" class="d-flex mb-3 ">
                 <div class="form-group">
                     <input type="text" name="search" id="search" class="form-control " value="{{ request('search') }}" placeholder="{{ __('messages.search_placeholder') }}">
                 </div>
@@ -23,7 +23,7 @@
             </form>
 
             <!-- select category and tag -->
-            <form method="GET" action="{{ route('blog.articles.index') }}" class="d-flex mb-3 mx-3">
+            <form method="GET" action="{{ route('articles.index') }}" class="d-flex mb-3 mx-3">
                 <div class="form-group mr-2 mx-2">
                     <select name="category" id="category" class="form-control">
                         <option value="">{{ __('messages.all_categories') }}</option>
@@ -50,7 +50,7 @@
         <!-- /.card-header -->
         <div class="d-flex justify-content-between mx-3 mt-3">
             <h3 class="card-title my-0">{{ __('messages.list_articles') }}</h3>
-            <a href="{{ route('blog.articles.create') }}" class="btn btn-success">{{ __('messages.add_article') }}</a>  
+            <a href="{{ route('articles.create') }}" class="btn btn-success">{{ __('messages.add_article') }}</a>  
         </div>
 
         <div class="card-body">
@@ -80,12 +80,12 @@
                             <td>{{ $article->category->name }}</td>
                             <td>{{ $article->created_at->format('d/m/Y') }}</td>
                             <td>
-                                <a href="{{ route('blog.articles.show', $article->id) }}" class="btn btn-secondary">{{ __('messages.show') }}</a>
+                                <a href="{{ route('articles.show', $article->id) }}" class="btn btn-secondary">{{ __('messages.show') }}</a>
                                 @can('update', $article)
-                                <a href="{{ route('blog.articles.edit', $article->id) }}" class="btn btn-primary">{{ __('messages.edit') }}</a>
+                                <a href="{{ route('articles.edit', $article->id) }}" class="btn btn-primary">{{ __('messages.edit') }}</a>
                                 @endcan
                                 @can('delete article')
-                                <form action="{{ route('blog.articles.destroy', $article->id) }}" method="POST" style="display:inline;">
+                                <form action="{{ route('articles.destroy', $article->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger" onclick="return confirm('{{ __('messages.confirm_delete') }}')">
