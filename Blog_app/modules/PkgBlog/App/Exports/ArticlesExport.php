@@ -3,16 +3,17 @@
 namespace Modules\PkgBlog\App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Modules\PkgBlog\App\Models\Article;
 
-class ArticlesExport implements FromCollection
+class ArticlesExport implements FromCollection, WithHeadings
 {
     /**
     * @return \Illuminate\Support\Collection
     */
     public function collection()
     {
-        return Article::all();
+        return Article::all(['title', 'content', 'user_id', 'category_id', 'created_at', 'updated_at']);
     }
 
         /**
@@ -23,9 +24,10 @@ class ArticlesExport implements FromCollection
     public function headings(): array
     {
         return [
-            'ID',
             'Title',
             'Content',
+            'User ID',
+            'Category ID',
             'Created At',
             'Updated At',
         ];

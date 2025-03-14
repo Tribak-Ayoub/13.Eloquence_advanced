@@ -4,45 +4,26 @@ namespace Modules\PkgBlog\App\Imports;
 
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Modules\PkgBlog\App\Models\Article;
-use Modules\PkgBlog\App\Models\Category;
-use Modules\PkgBlog\App\Models\Tag;
 
-class ArticlesImport implements ToModel
+class ArticlesImport implements ToModel, WithHeadingRow
 {
     /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
+     * @param array $row
+     *
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
     public function model(array $row)
     {
-        $category = Category::firstOrCreate([
-            'name' => $row['category'] ?? 'Uncategorized'
-        ]);
-        
+
         return new Article([
-            'title' => $row['title'] ?? 'Untitled', 
+            'title' => $row['title'] ?? 'Untitled',
             'content' => $row['content'] ?? 'No content',
             'user_id' => Auth::id() ?? 1,
-            'category_id' => $category->id,
+            'category_id' => (int) ($row['category_id'] ?? 1),
+            'created_at' => $row['created_at'] ?? now(),
+            'updated_at' => $row['updated_at'] ?? now(),
         ]);
-
-        $article->save();
-
-        // Attach Tags (comma-separated in CSV)
-        if (!empty($row['tags'])) {
-            $tagNames = explode(',', $row['tags']);
-            $tagIds = [];
-            
-            foreach ($tagNames as $tagName) {
-                $tag = Tag::firstOrCreate(['name' => trim($tagName)]);
-                $tagIds[] = $tag->id;
-            }
-
-            $article->tags()->sync($tagIds);
-        }
-
-        return $article;
     }
 }

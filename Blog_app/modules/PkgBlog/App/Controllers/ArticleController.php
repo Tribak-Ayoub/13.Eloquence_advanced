@@ -26,7 +26,7 @@ class ArticleController extends BaseController
     }
 
     public function index(Request $request)
-    {   
+    {
         $filters = [
             'category' => $request->category,
             'tag' => $request->tag,
@@ -112,11 +112,10 @@ class ArticleController extends BaseController
 
     public function import(Request $request)
     {
-        try{
+        try {
             $this->articleImportExportService->import($request);
             return redirect()->back()->with('success', 'Articles Imported!');
-        }catch(\Exeption $e)
-        {
+        } catch (\Exeption $e) {
             return redirect()->back()->with('error', 'Error importing articles: ' . $e->getMessage());
         }
     }
