@@ -11,7 +11,8 @@
         :CommentCount="$CommentCount"> </x-admin-chart>
 
     <div class="card">
-        <div class="card-header d-flex pb-0 pt-3">
+        <div class="card-header d-flex justify-content-between align-items-center pb-0 pt-3">
+            <div class="d-flex">
             <!-- input search -->
             <form method="GET" action="{{ route('articles.index') }}" class="d-flex mb-3 ">
                 <div class="form-group">
@@ -46,16 +47,24 @@
                 </div>
                 <button type="submit" class="btn btn-primary mx-3">{{ __('messages.filter_button') }}</button>
             </form>
-
-            <form action="{{ route('articles.import') }}" method="POST" enctype="multipart/form-data" class="d-flex mb-3 mx-3">
-                @csrf
-                <input type="file" name="file" required>
-                <button type="submit">Import Articles</button>
-            </form>
-            <div class="d-flex mb-3 mx-3">
-            <a href="{{ route('articles.export') }}">Export Articles</a>
-            </div>
-
+        </div>
+                    <!-- Import & Export -->
+                    <div class="d-flex justify-content-end mb-3 w-50">
+                        <!-- Import -->
+                        <form action="{{ route('articles.import') }}" method="POST" enctype="multipart/form-data" class="d-flex mx-2" title="import">
+                            @csrf
+                            <label class="btn btn-success text-white">
+                                <i class="fa-solid fa-upload"></i>
+                                <input type="file" name="file" hidden required onchange="this.closest('form').submit()">
+                            </label>
+                        </form>
+                    
+                        <!-- Export -->
+                        <a href="{{ route('articles.export') }}" class="btn btn-primary text-white" title="export">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                    </div>                    
+                    
         </div>
         <!-- /.card-header -->
         <div class="d-flex justify-content-between mx-3 mt-3">
