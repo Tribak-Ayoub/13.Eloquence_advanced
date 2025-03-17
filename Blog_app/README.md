@@ -40,7 +40,7 @@ php artisan config:clear
 To ensure that your test database has the necessary tables, run:
 
 ```bash
-php artisan migrate --env=testing
+php artisan migrate:fresh --seed --env=testing
 ```
 
 This step ensures that tests do not interfere with your production or development database.
@@ -62,31 +62,55 @@ Open `tests/Feature/ArticleTest.php` and update it with the following code:
 ```php
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
-use App\Models\Article;
+use Illuminate\Support\Facades\Hash;
+use Modules\PkgBlog\App\Models\Category;
+use Modules\PkgBlog\App\Models\Tag;
+use Tests\TestCase;
 
 class ArticleTest extends TestCase
 {
-    use RefreshDatabase; // Ensures database is reset before each test
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Run migrations and only seed the roles and permissions
+        $this->artisan('migrate:fresh'); // Reset the database
+        $this->artisan('db:seed', ['--class' => 'PermissionsSeeder']); // Seed permissions only
+        $this->artisan('db:seed', ['--class' => 'RoleSeeder']); // Seed roles only
+    }
 
     public function test_authenticated_user_can_create_article()
     {
-        // Create a user using a factory
-        $user = User::factory()->create();
-
-        // Act as the authenticated user and send a POST request
-        $response = $this->actingAs($user)->post(route('articles.store'), [
-            'title' => 'Test Article',
-            'content' => 'This is a test article.',
+        // Create a user
+        $user = User::create([
+            'name' => 'Test User',
+            'email' => 'testUser@gmail.com',
+            'password' => Hash::make('password'),
         ]);
 
-        // Assert the request was successful (redirects after storing data)
-        $response->assertStatus(302);
+        // Assign a role to the user
+        $user->assignRole('editor');
+
+        $category = Category::factory()->create();
+        $tags = Tag::factory()->count(3)->create();
+
+        // Send a POST request with authentication
+        $response = $this->actingAs($user)->post(route('articles.store'), [
+            'title' => 'test article',
+            'content' => 'this is a test article',
+            'category' => $category->id,
+            'tags' => $tags->pluck('id')->toArray(),
+        ]);
+
+        // Assert that the user is redirected to the articles page
+        $response->assertStatus(302);  // 302 is typically for redirects (e.g., to the article list page)
 
         // Ensure the article was saved in the database
-        $this->assertDatabaseHas('articles', ['title' => 'Test Article']);
+        $this->assertDatabaseHas('articles', [
+            'title' => 'test article',
+            'category_id' => $category->id,
+        ]);
     }
 
     public function test_guest_cannot_create_article()
@@ -104,16 +128,28 @@ class ArticleTest extends TestCase
         $this->assertDatabaseMissing('articles', ['title' => 'Guest Article']);
     }
 
-    public function test_article_creation_requires_validation()
+    public function test_authenticated_user_cannot_create_article_with_invalid_data()
     {
-        // Create a user using a factory
-        $user = User::factory()->create();
+        // Create a user
+        $user = User::create([
+            'name' => 'Test User',
+            'email' => 'testUser@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
 
-        // Act as the user and send an empty request
-        $response = $this->actingAs($user)->post(route('articles.store'), []);
+        // Assign a role to the user
+        $user->assignRole('editor');
 
-        // Assert that validation errors are present for required fields
-        $response->assertSessionHasErrors(['title', 'content']);
+        // Send a POST request with missing fields (invalid data)
+        $response = $this->actingAs($user)->post(route('articles.store'), [
+            'title' => '', // Invalid title (empty)
+            'content' => '', // Invalid content (empty)
+            'category' => null, // Invalid category (null)
+            'tags' => [], // Invalid tags (empty array)
+        ]);
+
+        // Assert that validation errors are present for the required fields
+        $response->assertSessionHasErrors(['title', 'content', 'category', 'tags']);
     }
 }
 ```

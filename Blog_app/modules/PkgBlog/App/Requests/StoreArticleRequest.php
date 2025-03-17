@@ -25,7 +25,7 @@ class StoreArticleRequest extends FormRequest
             'title' => 'required|string|max:255',
             'category' => 'required|exists:categories,id',
             'content' => 'required|string|min:10',
-            'tags' => 'array',
+            'tags' => 'required|array|min:1',
             'tags.*' => 'exists:tags,id',
         ];
     }
