@@ -1,330 +1,179 @@
-# Laravel Testing Tutorial for Blog
+# Laravel Blog with Modular System
 
-## Introduction
-### **Laravel Modular System Setup Instructions**
+This project implements a **modular Laravel-based blog**, focusing on modularity, authorization, validation, and testing. It includes features such as multi-language support, role-based access control (RBAC) through policies, custom validation with Form Requests, and tests to ensure the blog's functionality. The application is structured in a way that allows easy expansion and maintainability.
 
-Testing is crucial to ensure that your Laravel blog functions correctly. In this tutorial, we will focus on testing the article creation functionality using Laravel's built-in testing framework, PHPUnit. We will create tests to verify:
+## Features
 
-- That authenticated users can create articles.
-- That guests are prevented from creating articles.
-- That validation rules are enforced.
+- **Modular System**: The project leverages Laravel's modular approach to split functionality into separate modules (e.g., Articles, Categories, Tags, etc.), making it scalable and maintainable.
+- **Role-based Access Control (RBAC)**: User roles (Admin, Editor, etc.) control who can perform actions like creating, updating, or deleting articles, utilizing Laravel’s built-in policies.
+- **Multi-language Support**: Supports multiple languages using Laravel's translation system.
+- **Form Request Validation**: Ensures data integrity by validating form submissions via Laravel Form Requests.
+- **Testing**: PHPUnit tests ensure that features like article creation, validation, and user authorization work as expected.
 
-## Setting Up Tests
+---
 
-Before writing tests, we need to ensure our environment is correctly set up. Laravel provides a separate testing database to prevent tests from affecting real data.
+## Table of Contents
 
-### Creating the `.env.testing` File
+1. [Project Setup](#project-setup)
+2. [Modular System Setup](#modular-system-setup)
+3. [Translating Your Application](#translating-your-application)
+4. [Article Policies](#article-policies)
+5. [Form Request Validation](#form-request-validation)
+6. [Testing the Blog](#testing-the-blog)
+7. [Conclusion](#conclusion)
 
-By default, Laravel uses the `.env` file for configuration, but it is recommended to create a `.env.testing` file for testing purposes. If you don't have one, create it with the following command:
+---
+
+## Project Setup
+
+### Requirements
+
+- PHP 8.0 or higher
+- Composer
+- Laravel 11
+- MySQL Database
+- Node.js and NPM (for asset compilation with Vite)
+
+---
+
+## **Installation**
+
+1. **Clone the Repository**
 
 ```bash
-cp .env .env.testing
+git clone https://github.com/yourusername/laravel-blog.git
+cd laravel-blog
 ```
 
-Then, update your `.env.testing` file to use a dedicated test database:
+2. **Install Dependencies**
+
+```bash
+composer install
+npm install
+```
+
+3. **Set Up the Environment**
+
+Rename the `.env.example` file to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Generate the application key:
+
+```bash
+php artisan key:generate
+```
+
+4. **Configure the Database**
+
+Open the `.env` file and update the database connection settings:
 
 ```ini
 DB_CONNECTION=mysql
-DB_DATABASE=your_test_db
-DB_USERNAME=root
-DB_PASSWORD=
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database_name
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 ```
 
-After updating the file, clear the configuration cache to apply the changes:
+Run migrations to create the necessary database tables:
 
 ```bash
-php artisan config:clear
+php artisan migrate
 ```
 
-### Running Migrations for the Test Database
-
-To ensure that your test database has the necessary tables, run:
+5. **Install Frontend Dependencies (Vite)**
 
 ```bash
-php artisan migrate:fresh --seed --env=testing
+npm run dev
 ```
 
-This step ensures that tests do not interfere with your production or development database.
+---
 
-## Creating a Feature Test for Articles
+## **Modular System Setup**
 
-Laravel provides a command to generate test files. Run the following command to create a test for article functionality:
+This application is built with a **modular system** in mind. The application is divided into independent modules, each handling its own functionality (e.g., blog articles, categories, tags).
 
-```bash
-php artisan make:test ArticleTest
+### **Step 1: Create a Modular Folder Structure**
+
+You can organize your project into modules by creating separate directories for each module (e.g., `PkgBlog`, `PkgCategory`, `PkgTag`). Each module will contain its own controllers, views, routes, models, and other resources.
+
+Create a directory structure like this:
+
+```
+/Modules
+    /PkgBlog
+        /App
+            /Controllers
+            /Models
+            /Views
+            /Routes
+        /Resources
+            /lang
+            /views
+        /Providers
+            PkgBlogServiceProvider.php
 ```
 
-This will generate a new file in the `tests/Feature` directory named `ArticleTest.php`.
+### **Step 2: Set Up the Service Providers**
 
-## Writing the Test
+Each module should have its own service provider to register module-specific resources like routes, views, and models.
 
-Open `tests/Feature/ArticleTest.php` and update it with the following code:
+For example, in the `PkgBlog` module, create a `PkgBlogServiceProvider` inside the `Modules/PkgBlog/Providers` folder:
 
 ```php
-namespace Tests\Feature;
+// Modules/PkgBlog/Providers/PkgBlogServiceProvider.php
 
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Modules\PkgBlog\App\Models\Category;
-use Modules\PkgBlog\App\Models\Tag;
-use Tests\TestCase;
+namespace Modules\PkgBlog\Providers;
 
-class ArticleTest extends TestCase
+use Illuminate\Support\ServiceProvider;
+
+class PkgBlogServiceProvider extends ServiceProvider
 {
-    protected function setUp(): void
+    public function register(): void
     {
-        parent::setUp();
-
-        // Run migrations and only seed the roles and permissions
-        $this->artisan('migrate:fresh'); // Reset the database
-        $this->artisan('db:seed', ['--class' => 'PermissionsSeeder']); // Seed permissions only
-        $this->artisan('db:seed', ['--class' => 'RoleSeeder']); // Seed roles only
+        // Register any bindings for this module (e.g., custom services)
     }
 
+    public function boot(): void
+    {
+        // Load module routes
+        $this->loadRoutesFrom(module_path('PkgBlog', 'Routes/web.php'));
+
+        // Load views for this module
+        $this->loadViewsFrom(module_path('PkgBlog', 'Resources/views'), 'pkgblog');
+    }
 }
 ```
 
-### **5. Register Service Providers**
 
-Now, you need to register the module service providers in your `AppServiceProvider.php` file so that Laravel loads the resources for each module.
+### **Step 3: Register the Service Providers**
 
-In `app/Providers/AppServiceProvider.php`, modify the `register` method to include the module providers:
-
-```php
-public function register(): void
-{
-    // Register the service providers for each module
-    $this->app->register(Modules\Core\App\Providers\CoreServiceProvider::class);
-    $this->app->register(Modules\PkgBlog\App\Providers\PkgBlogServiceProvider::class);
-}
-```
-
-### **6. Define Routes for Each Module**
-
-Inside the `Routes` folder of your module, define the routes for that module. For example, for `PkgBlog`, create the following route definition in a file like `web.php`:
-
-
-# Form Request Validation in Laravel
-
-This project uses Laravel Form Request classes to handle validation and authorization for incoming requests. Form Requests help keep controllers clean by encapsulating validation logic.
-
-## What is a Form Request?
-A Form Request is a custom request class that contains validation rules and authorization logic for a specific action, such as creating or updating an article.
-
-## Creating a Form Request
-To generate a Form Request class, use the Artisan command:
-```bash
-php artisan make:request ArticleRequest
-```
-This creates a file in `app/Http/Requests/ArticleRequest.php`.
-
-## Structure of a Form Request
-A Form Request contains two main methods:
-
-### 1. **authorize()**
-This method determines if the user is authorized to make the request.
-```php
-public function authorize(): bool
-{
-    return true; // Set to false if the user shouldn't be allowed
-}
-```
-
-### 2. **rules()**
-This method defines the validation rules for the request.
-```php
-public function rules(): array
-{
-    return [
-        'title' => 'required|string|max:255',
-        'content' => 'required|string',
-        'category_id' => 'required|exists:categories,id',
-        'tags' => 'array',
-        'tags.*' => 'exists:tags,id'
-    ];
-}
-```
-
-## Applying a Form Request in a Controller
-Instead of manually writing validation logic in controllers, pass the Form Request as a parameter:
-```php
-public function store(ArticleRequest $request)
-{
-    $article = Article::create($request->validated());
-    return redirect()->route('articles.index')->with('success', 'Article created successfully.');
-}
-```
-
-## Customizing Error Messages
-Custom error messages can be defined using the `messages()` method:
-```php
-public function messages(): array
-{
-    return [
-        'title.required' => 'The title field is required.',
-        'content.required' => 'Content cannot be empty.',
-    ];
-}
-```
-
-## Authorization Logic in Form Requests
-You can use the `authorize()` method to restrict access based on user roles:
-```php
-public function authorize(): bool
-{
-    return auth()->user()->can('create', Article::class);
-}
-```
-
-## Benefits of Using Form Requests
-- Keeps controllers clean and organized.
-- Centralizes validation logic.
-- Allows for custom error messages.
-- Supports authorization logic.
-
-## Conclusion
-Using Laravel Form Requests simplifies validation and ensures that all incoming data is properly validated before being processed in controllers. It enhances code maintainability and security.
-
-### **1. Install the Laravel Lang Package**
-
-Run this command to install the package:
-
-```bash
-composer require laravel-lang/lang
-```
-
----
-
-### **2. Install Languages (e.g., English and French)**
-
-After the package is installed, use the `lang:install` command to download and install the translation files for the languages you want to support.
-
-For example, to install English (`en`) and French (`fr`):
-
-```bash
-php artisan lang:install en fr
-```
-
-## This will download and install the translation files for English and French in the `resources/lang` directory.
-
-### **3. Custom Translations**
-
-You can add custom translations in your language files located in the `resources/lang/{lang}` directory. For example:
-
-**English Translations (resources/lang/en/messages.php):**
+To register the service providers in the `app.php` configuration, you need to add them in the `config/app.php` file:
 
 ```php
-return [
-    'welcome' => 'Welcome to our blog!',
-    // Other custom translations...
-];
+// config/app.php
+
+'providers' => [
+    // Other service providers...
+
+    Modules\PkgBlog\Providers\PkgBlogServiceProvider::class,
+
+],
 ```
 
-**French Translations (resources/lang/fr/messages.php):**
+This ensures that when Laravel bootstraps, it loads the modules’ routes and views.
+
+### **Step 4: Define Routes for Each Module**
+
+Each module can define its own routes within the `Routes/web.php` file. For example, the routes for the `PkgBlog` module:
 
 ```php
-return [
-    'welcome' => 'Bienvenue sur notre blog!',
-    // Other custom translations...
-];
-```
+// Modules/PkgBlog/Routes/web.php
 
----
-
-### **4. Use Translations in Views**
-
-You can now use Laravel’s built-in `__()` helper function to display translations in your views. For example:
-
-```blade
-<!-- auth.failed will show the translation for failed login attempts -->
-{{ __('auth.failed') }}
-
-<!-- Custom translation message in messages.php -->
-{{ __('messages.welcome') }}
-```
-
-The `__('messages.welcome')` translation will look for the `welcome` key in your language files (e.g., `resources/lang/en/messages.php`).
-
-# Article Policies in Laravel
-
-This project uses Laravel Policies to handle authorization for managing articles. Policies ensure that only authorized users can perform specific actions on articles.
-
-## Policy Overview
-
-The `ArticlePolicy` is responsible for defining the authorization logic for the `Article` model. The policy is registered in `AuthServiceProvider` and is automatically applied using Laravel's `authorize` method or `@can` Blade directives.
-
-### Policy Methods
-
-The `ArticlePolicy` includes the following methods:
-
-- **viewAny(User $user): bool**  
-  Determines whether the user can view any articles.
-  ```php
-  public function viewAny(User $user): bool
-  {
-      return false;
-  }
-  ```
-
-- **view(User $user, Article $article): bool**  
-  Determines whether the user can view a specific article.
-  ```php
-  public function view(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
-
-- **create(User $user): bool**  
-  Determines whether the user can create articles.
-  ```php
-  public function create(User $user): bool
-  {
-      return false;
-  }
-  ```
-
-- **update(User $user, Article $article): bool**  
-  Ensures that only the owner of an article can edit it.
-  ```php
-  public function update(User $user, Article $article): bool
-  {
-      return $user->id === $article->user_id;
-  }
-  ```
-
-- **delete(User $user, Article $article): bool**  
-  Restricts article deletion.
-  ```php
-  public function delete(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
-
-- **restore(User $user, Article $article): bool**  
-  Prevents article restoration.
-  ```php
-  public function restore(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
-
-- **forceDelete(User $user, Article $article): bool**  
-  Prevents permanent deletion.
-  ```php
-  public function forceDelete(User $user, Article $article): bool
-  {
-      return false;
-  }
-  ```
-
-## Applying Policies in Controllers
-
-In controllers, policies are applied using:
-
-```php
 use Illuminate\Support\Facades\Route;
 use Modules\PkgBlog\App\Controllers\ArticleController;
 
@@ -333,115 +182,331 @@ Route::prefix('blog')->group(function () {
 });
 ```
 
-    public function test_authenticated_user_can_create_article()
+
+### **Step 5: Create the Controllers and Models for Each Module**
+
+Each module should have its own controllers and models. For example, in the `PkgBlog` module, create the `ArticleController` and `Article` model:
+
+```php
+// Modules/PkgBlog/App/Controllers/ArticleController.php
+
+namespace Modules\PkgBlog\App\Controllers;
+
+use App\Http\Controllers\Controller;
+use Modules\PkgBlog\App\Models\Article;
+use Illuminate\Http\Request;
+
+class ArticleController extends Controller
+{
+    public function index()
     {
-        // Create a user
-        $user = User::create([
-            'name' => 'Test User',
-            'email' => 'testUser@gmail.com',
-            'password' => Hash::make('password'),
-        ]);
-
-        // Assign a role to the user
-        $user->assignRole('editor');
-
-        $category = Category::factory()->create();
-        $tags = Tag::factory()->count(3)->create();
-
-        // Send a POST request with authentication
-        $response = $this->actingAs($user)->post(route('articles.store'), [
-            'title' => 'test article',
-            'content' => 'this is a test article',
-            'category' => $category->id,
-            'tags' => $tags->pluck('id')->toArray(),
-        ]);
-
-        // Assert that the user is redirected to the articles page
-        $response->assertStatus(302);  // 302 is typically for redirects (e.g., to the article list page)
-
-        // Ensure the article was saved in the database
-        $this->assertDatabaseHas('articles', [
-            'title' => 'test article',
-            'category_id' => $category->id,
-        ]);
+        $articles = Article::all();
+        return view('pkgblog::articles.index', compact('articles'));
     }
 
-    public function test_guest_cannot_create_article()
-    {
-        // Send a POST request without authentication
-        $response = $this->post(route('articles.store'), [
-            'title' => 'Guest Article',
-            'content' => 'Should not be created.',
-        ]);
+    // Other methods for creating, storing, editing, and deleting articles
+}
+```
 
-        // Assert that the user is redirected to the login page
-        $response->assertRedirect(route('login'));
+```php
+// Modules/PkgBlog/App/Models/Article.php
 
-        // Ensure the article was not saved in the database
-        $this->assertDatabaseMissing('articles', ['title' => 'Guest Article']);
-    }
+namespace Modules\PkgBlog\App\Models;
 
-    public function test_authenticated_user_cannot_create_article_with_invalid_data()
-    {
-        // Create a user
-        $user = User::create([
-            'name' => 'Test User',
-            'email' => 'testUser@gmail.com',
-            'password' => Hash::make('password'),
-        ]);
+use Illuminate\Database\Eloquent\Model;
 
-        // Assign a role to the user
-        $user->assignRole('editor');
+class Article extends Model
+{
+    protected $fillable = ['title', 'content', 'category_id'];
+}
+```
 
-        // Send a POST request with missing fields (invalid data)
-        $response = $this->actingAs($user)->post(route('articles.store'), [
-            'title' => '', // Invalid title (empty)
-            'content' => '', // Invalid content (empty)
-            'category' => null, // Invalid category (null)
-            'tags' => [], // Invalid tags (empty array)
-        ]);
+### **Step 6: Create Views for Each Module**
 
-        // Assert that validation errors are present for the required fields
-        $response->assertSessionHasErrors(['title', 'content', 'category', 'tags']);
+Create views for each module inside their respective `Resources/views` folders. For example:
+
+```php
+// Modules/PkgBlog/Resources/views/articles/index.blade.php
+
+@extends('layouts.app')
+
+@section('content')
+    <h1>Articles</h1>
+    @foreach ($articles as $article)
+        <div>{{ $article->title }}</div>
+    @endforeach
+@endsection
+```
+
+
+### **Step 7: Autoload the Modules**
+
+To autoload the modules, ensure that the `composer.json` file is configured to load them automatically. Add the `autoload` section like this:
+
+```json
+"autoload": {
+    "psr-4": {
+        "Modules\\": "modules",
     }
 }
 ```
 
-### Explanation of Test Cases
+After updating the `composer.json` file, run the following command to regenerate the autoload files:
 
-1. **`test_authenticated_user_can_create_article`**
+```bash
+composer dump-autoload
+```
 
-   - Creates a user.
-   - Authenticates the user and submits an article form.
-   - Checks if the article is stored in the database.
-   - Ensures a successful response (HTTP status 302 for redirect).
+### **Step 8: Testing the Modular System**
 
-2. **`test_guest_cannot_create_article`**
+Now that all modules are set up, you should test if the routes, controllers, and views are properly working. You can do this by visiting the routes you've defined in your browser and ensuring everything is functioning correctly.
 
-   - Attempts to create an article without authentication.
-   - Ensures the user is redirected to the login page.
-   - Confirms the article was not stored in the database.
+---
 
-3. **`test_article_creation_requires_validation`**
-   - Tries to submit an empty form while authenticated.
-   - Ensures validation errors are triggered.
-   - Confirms errors for missing `title` and `content` fields.
+## **Translating Your Application**
 
-## Running the Tests
+Laravel comes with a powerful translation system that allows you to display content in different languages.
 
-To execute your tests, run the following command:
+### 1. Install Translation Files
+
+To add more languages, you can install the `laravel-lang/lang` package, which provides translations for Laravel validation messages and other system texts:
+
+```bash
+composer require laravel-lang/lang
+```
+
+Next, publish the translation files:
+
+```bash
+php artisan lang:install en fr  # This installs English and French language files
+```
+
+You can find the translations in `resources/lang/{lang}`.
+
+### 2. Use Translations in Your Views
+
+You can use the `__()` helper function to translate text:
+
+```php
+// Blade template
+{{ __('auth.failed') }}  <!-- Output: Authentication failed -->
+{{ __('messages.welcome') }}  <!-- Output: Welcome message -->
+```
+
+Modify the `resources/lang/{lang}/messages.php` file to add your custom translations:
+
+```php
+// resources/lang/en/messages.php
+return [
+    'welcome' => 'Welcome to the blog!',
+];
+
+// resources/lang/fr/messages.php
+return [
+    'welcome' => 'Bienvenue sur le blog!',
+];
+```
+
+---
+
+## **Article Policies in Laravel**
+
+### **Overview of Policies**
+
+Policies are used to authorize actions on models. In this blog project, the `ArticlePolicy` governs what actions users can perform on articles, such as creating, updating, and deleting.
+
+### **Policy Methods**
+
+The `ArticlePolicy` has methods for each action:
+
+- **viewAny(User $user)**: Determines if a user can view any article.
+- **view(User $user, Article $article)**: Determines if a user can view a specific article.
+- **create(User $user)**: Determines if a user can create an article.
+- **update(User $user, Article $article)**: Ensures only the owner of an article can edit it.
+- **delete(User $user, Article $article)**: Prevents article deletion.
+- **restore(User $user, Article $article)**: Prevents article restoration.
+- **forceDelete(User $user, Article $article)**: Prevents permanent deletion.
+
+### **Policy Code**
+
+Here’s how the `ArticlePolicy` is defined:
+
+```php
+// app/Policies/ArticlePolicy.php
+public function update(User $user, Article $article): bool
+{
+    return $user->id === $article->user_id;
+}
+
+public function delete(User $user, Article $article): bool
+{
+    return false;
+}
+
+public function restore(User $user, Article $article): bool
+{
+    return false;
+}
+
+public function forceDelete(User $user, Article $article): bool
+{
+    return false;
+}
+```
+
+### **Applying Policies**
+
+#### In Controllers:
+
+You can use the `authorize` method to check permissions in controllers:
+
+```php
+public function update(Article $article)
+{
+    $this->authorize('update', $article);  // Checks if the user can update the article
+    // Logic to update the article...
+}
+```
+
+#### In Blade Views:
+
+You can use the `@can` directive to conditionally display elements based on permissions:
+
+```blade
+@can('update', $article)
+    <a href="{{ route('articles.edit', $article->id) }}" class="btn btn-primary">Edit</a>
+@endcan
+```
+
+---
+
+## **Form Request Validation in Laravel**
+
+Laravel uses **Form Request Validation** to validate incoming requests. This keeps controller methods clean and separates the validation logic.
+
+### **Creating a Form Request**
+
+You can create a custom Form Request using Artisan:
+
+```bash
+php artisan make:request ArticleRequest
+```
+
+Inside the generated `ArticleRequest.php` file, define the rules for validation:
+
+```php
+// app/Http/Requests/ArticleRequest.php
+public function rules(): array
+{
+    return [
+        'title' => 'required|string|max:255',
+        'content' => 'required|string',
+        'category_id' => 'required|exists:categories,id',
+        'tags' => 'array',
+        'tags.*' => 'exists:tags,id',
+    ];
+}
+```
+
+Then, inject this request into your controller method:
+
+```php
+public function store(ArticleRequest $request)
+{
+    $article = Article::create($request->validated());
+    return redirect()->route('articles.index')->with('success', 'Article created successfully.');
+}
+```
+
+---
+
+## **Testing the Blog**
+
+Testing is crucial to ensure that your application works as expected. In this project, tests are written for article creation and validation.
+
+### **Test Cases**
+
+Here are some essential tests:
+
+1. **Authenticated User Can Create Article**
+   
+   This test checks if an authenticated user can successfully create an article.
+
+```php
+public function test_authenticated_user_can_create_article()
+{
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+    $tags = Tag::factory()->count(3)->create();
+
+    $response = $this->actingAs($user)->post(route('articles.store'), [
+        'title' => 'Test Article',
+        'content' => 'This is a test article.',
+        'category_id' => $category->id,
+        'tags' => $tags->pluck('id')->toArray(),
+    ]);
+
+    $response->assertStatus(302);  // Successful redirect
+    $this->assertDatabaseHas('articles', ['title' => 'Test Article']);
+}
+```
+
+2. **Guest Cannot Create Article**
+
+   Ensures that a guest is redirected to the login page and cannot create an article.
+
+```php
+public function test_guest_cannot_create_article()
+{
+    $response = $this->post(route('articles.store'), [
+        'title' => 'Guest Article',
+        'content' => 'Should not be created.',
+    ]);
+
+    $response->assertRedirect(route('login'));
+    $this->assertDatabaseMissing('articles', ['title' => 'Guest Article']);
+}
+```
+
+3. **Article Creation Requires Validation**
+
+   Verifies that the application will trigger validation errors if required fields are missing.
+
+```php
+public function test_article_creation_requires_validation()
+{
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post(route('articles.store'), [
+        'title' => '', // Invalid title
+        'content' => '', // Invalid content
+        'category_id' => null, // Invalid category
+        'tags' => [], // Invalid tags
+    ]);
+
+    $response->assertSessionHasErrors(['title', 'content', 'category_id', 'tags']);
+}
+```
+
+### **Running Tests**
+
+You can run the tests using the following command:
 
 ```bash
 php artisan test --filter=ArticleTest
 ```
 
-This will run only the tests inside `ArticleTest.php`.
+This will run only the tests inside the `ArticleTest.php` file.
 
-## Conclusion
+---
 
-This tutorial covered:
+## **Conclusion**
 
-- How to set up and configure Laravel for testing.
-- Creating the `.env.testing` file and configuring a separate database for testing.
-- Writing feature tests for article creation.
-- Ensuring authentication, validation, and database assertions are working correctly.
+This project demonstrates a clean, maintainable way to build a modular blog application using Laravel. The key features include:
+
+- **Modular architecture** for scalability.
+- **Role-based access control** to restrict who can perform certain actions on articles.
+- **Form request validation** to ensure data integrity.
+- **Testing** to verify functionality and user authorization.
+
+By following the steps in this guide, you should have a solid foundation for building more complex applications with Laravel.
