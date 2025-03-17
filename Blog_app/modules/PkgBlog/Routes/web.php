@@ -9,7 +9,9 @@ use Modules\PkgBlog\App\Controllers\CategoryController;
 
 Auth::routes();
 
-Route::prefix('articles')->group(function () {
+Route::prefix('articles')->middleware('auth')->group(function () {
+    Route::post('/import', [ArticleController::class, 'import'])->name('articles.import');
+    Route::get('/export', [ArticleController::class, 'export'])->name('articles.export');
     Route::get('/', [ArticleController::class, 'index'])->name('articles.index');
     Route::get('/create', [ArticleController::class, 'create'])->name('articles.create');
     Route::post('/store', [ArticleController::class, 'store'])->name('articles.store');

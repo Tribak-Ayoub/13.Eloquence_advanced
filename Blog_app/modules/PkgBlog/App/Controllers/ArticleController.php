@@ -11,20 +11,22 @@ use Modules\PkgBlog\App\Models\Category;
 use Modules\PkgBlog\App\Models\Comment;
 use Modules\PkgBlog\App\Models\Tag;
 use Modules\PkgBlog\App\Requests\StoreArticleRequest;
+use Modules\PkgBlog\App\Services\ArticleImportExportService;
 use Modules\PkgBlog\App\Services\ArticleService;
 
 class ArticleController extends BaseController
 {
-    protected $articleService;
+    protected $articleService, $articleImportExportService;
 
-    public function __construct(ArticleService $articleService)
+    public function __construct(ArticleService $articleService, ArticleImportExportService $articleImportExportService)
     {
         $this->articleService = $articleService;
+        $this->articleImportExportService = $articleImportExportService;
         $this->middleware('auth');
     }
 
     public function index(Request $request)
-    {   
+    {
         $filters = [
             'category' => $request->category,
             'tag' => $request->tag,
@@ -106,5 +108,20 @@ class ArticleController extends BaseController
         $this->articleService->deleteArticle($article);
 
         return redirect()->route('articles.index')->with('success', 'L\'article a bien été supprimé');
+    }
+
+    public function import(Request $request)
+    {
+        try {
+            $this->articleImportExportService->import($request);
+            return redirect()->back()->with('success', 'Articles Imported!');
+        } catch (\Exeption $e) {
+            return redirect()->back()->with('error', 'Error importing articles: ' . $e->getMessage());
+        }
+    }
+
+    public function export()
+    {
+        return $this->articleImportExportService->export();
     }
 }

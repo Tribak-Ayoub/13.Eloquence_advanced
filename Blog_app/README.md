@@ -1,142 +1,86 @@
+# Laravel Testing Tutorial for Blog
+
+## Introduction
 ### **Laravel Modular System Setup Instructions**
 
-These instructions guide you on how to set up a modular system in your Laravel application. This modular system will allow you to better organize your application by grouping related features into separate modules, making it easier to scale, maintain, and manage.
+Testing is crucial to ensure that your Laravel blog functions correctly. In this tutorial, we will focus on testing the article creation functionality using Laravel's built-in testing framework, PHPUnit. We will create tests to verify:
 
----
+- That authenticated users can create articles.
+- That guests are prevented from creating articles.
+- That validation rules are enforced.
 
-## Prerequisites
+## Setting Up Tests
 
-- Laravel 8 or later
-- Composer installed
-- PHP 7.3 or later
+Before writing tests, we need to ensure our environment is correctly set up. Laravel provides a separate testing database to prevent tests from affecting real data.
 
----
+### Creating the `.env.testing` File
 
-## Steps to Set Up the Modular System
-
-### **1. Create the Modules Directory**
-
-Create a `modules` directory in the root of your Laravel project. This will be the parent directory where all your modules will reside.
+By default, Laravel uses the `.env` file for configuration, but it is recommended to create a `.env.testing` file for testing purposes. If you don't have one, create it with the following command:
 
 ```bash
-mkdir modules
+cp .env .env.testing
 ```
 
-### **2. Autoload Modules and Helpers**
+Then, update your `.env.testing` file to use a dedicated test database:
 
-To ensure that your modules and helpers are automatically loaded, you need to update the `composer.json` file. Add the `Modules` namespace and autoload helper files.
-
-Open `composer.json` and update the `autoload` section:
-
-```json
-"autoload": {
-    "psr-4": {
-        "App\\": "app/",
-        "Modules\\": "modules/"
-    }
-}
+```ini
+DB_CONNECTION=mysql
+DB_DATABASE=your_test_db
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
-Then, run the following command to update Composer's autoloader:
+After updating the file, clear the configuration cache to apply the changes:
 
 ```bash
-composer dump-autoload
+php artisan config:clear
 ```
 
-### **3. Create a Module (e.g., `PkgBlog`)**
+### Running Migrations for the Test Database
 
-Now, create the directory structure for your first module under the `modules` directory. For example, to create the `PkgBlog` module, the structure should look like this:
+To ensure that your test database has the necessary tables, run:
 
-```
-/modules
-  /PkgBlog
-    /App
-      /Controllers
-      /Models
-      /Providers
-    /Database
-      /Migrations
-      /Seeders
-    /Resources
-      /Views
-    /Routes
+```bash
+php artisan migrate:fresh --seed --env=testing
 ```
 
-### **4. Create the Service Provider for Your Module**
+This step ensures that tests do not interfere with your production or development database.
 
-Each module should have its own service provider to register the module's resources such as routes, views, and migrations. 
+## Creating a Feature Test for Articles
 
-#### **4.1 Core Module (CoreServiceProvider.php)**
-In the Core module, create the `CoreServiceProvider.php` file inside `Modules/Core/App/Providers`.
+Laravel provides a command to generate test files. Run the following command to create a test for article functionality:
+
+```bash
+php artisan make:test ArticleTest
+```
+
+This will generate a new file in the `tests/Feature` directory named `ArticleTest.php`.
+
+## Writing the Test
+
+Open `tests/Feature/ArticleTest.php` and update it with the following code:
 
 ```php
-namespace Modules\Core\App\Providers;
+namespace Tests\Feature;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Modules\PkgBlog\App\Models\Category;
+use Modules\PkgBlog\App\Models\Tag;
+use Tests\TestCase;
 
-class CoreServiceProvider extends ServiceProvider
+class ArticleTest extends TestCase
 {
-    /**
-     * Register services.
-     */
-    public function register(): void
+    protected function setUp(): void
     {
-        // Register any services specific to the core module here.
+        parent::setUp();
+
+        // Run migrations and only seed the roles and permissions
+        $this->artisan('migrate:fresh'); // Reset the database
+        $this->artisan('db:seed', ['--class' => 'PermissionsSeeder']); // Seed permissions only
+        $this->artisan('db:seed', ['--class' => 'RoleSeeder']); // Seed roles only
     }
 
-    /**
-     * Bootstrap services.
-     */
-    public function boot(): void
-    {
-        // Load migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../../Database/Migrations');
-        
-        // Load routes from each file inside the Routes directory
-        foreach (glob(__DIR__ . '/../../Routes/*.php') as $routeFile) {
-            $this->loadRoutesFrom($routeFile);
-        }
-
-        // Load views
-        $this->loadViewsFrom(__DIR__ . '/../../Resources/Views', 'Core');
-    }
-}
-```
-
-#### **4.2 Blog Module (PkgBlogServiceProvider.php)**
-In the PkgBlog module, create the `PkgBlogServiceProvider.php` file inside `Modules/PkgBlog/App/Providers`.
-
-```php
-namespace Modules\PkgBlog\App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-
-class PkgBlogServiceProvider extends ServiceProvider
-{
-    /**
-     * Register services.
-     */
-    public function register(): void
-    {
-        // Register any services specific to the blog module here.
-    }
-
-    /**
-     * Bootstrap services.
-     */
-    public function boot(): void
-    {
-        // Load migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../../Database/Migrations');
-        
-        // Load routes from each file inside the Routes directory
-        foreach (glob(__DIR__ . '/../../Routes/*.php') as $routeFile) {
-            $this->loadRoutesFrom($routeFile);
-        }
-
-        // Load views
-        $this->loadViewsFrom(__DIR__ . '/../../Resources/Views', 'PkgBlog');
-    }
 }
 ```
 
@@ -389,138 +333,115 @@ Route::prefix('blog')->group(function () {
 });
 ```
 
-### **7. Create Controllers and Views for the Module**
-
-In the `Controllers` directory of your module, create a controller to handle the logic for the module. For example, the `ArticleController.php` for managing blog articles.
-
-```php
-namespace Modules\PkgBlog\App\Controllers;
-
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Modules\PkgBlog\App\Models\Article;
-
-class ArticleController extends Controller
-{
-    public function index()
+    public function test_authenticated_user_can_create_article()
     {
-        $articles = Article::all();
-        return view('PkgBlog::articles.index', compact('articles'));
-    }
-
-    public function create()
-    {
-        return view('PkgBlog::articles.create');
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
+        // Create a user
+        $user = User::create([
+            'name' => 'Test User',
+            'email' => 'testUser@gmail.com',
+            'password' => Hash::make('password'),
         ]);
 
-        Article::create($request->all());
-        return redirect()->route('blog.index');
+        // Assign a role to the user
+        $user->assignRole('editor');
+
+        $category = Category::factory()->create();
+        $tags = Tag::factory()->count(3)->create();
+
+        // Send a POST request with authentication
+        $response = $this->actingAs($user)->post(route('articles.store'), [
+            'title' => 'test article',
+            'content' => 'this is a test article',
+            'category' => $category->id,
+            'tags' => $tags->pluck('id')->toArray(),
+        ]);
+
+        // Assert that the user is redirected to the articles page
+        $response->assertStatus(302);  // 302 is typically for redirects (e.g., to the article list page)
+
+        // Ensure the article was saved in the database
+        $this->assertDatabaseHas('articles', [
+            'title' => 'test article',
+            'category_id' => $category->id,
+        ]);
     }
-}
-```
 
-Create views under `modules/PkgBlog/Resources/Views/`. For example, create `index.blade.php` to display the list of articles.
-
-```blade
-<h1>Blog Articles</h1>
-<a href="{{ route('blog.create') }}">Add New Article</a>
-@if($articles->isNotEmpty())
-    @foreach ($articles as $article)
-        <h2>{{ $article->title }}</h2>
-        <p>{{ $article->content }}</p>
-    @endforeach
-@else
-    <p>No articles found</p>
-@endif
-```
-
-### **8. Create Models and Migrations**
-
-Create models and migrations for your module. For the `PkgBlog` module, you need a model for `Article` and a migration file for creating the necessary table in the database.
-
-Create the `Article` model inside `modules/PkgBlog/App/Models/Article.php`:
-
-```php
-namespace Modules\PkgBlog\App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class Article extends Model
-{
-    protected $fillable = ['title', 'content'];
-}
-```
-
-Create the migration file inside `modules/PkgBlog/Database/Migrations/` to create the `articles` table:
-
-```php
-public function up()
-{
-    Schema::create('articles', function (Blueprint $table) {
-        $table->id();
-        $table->string('title');
-        $table->text('content');
-        $table->timestamps();
-    });
-}
-```
-
-### **9. Seed Data for the Module**
-
-If you'd like to seed data for your module, create a seeder class inside `modules/PkgBlog/Database/Seeders/ArticleSeeder.php`.
-
-```php
-namespace Modules\PkgBlog\Database\Seeders;
-
-use Illuminate\Database\Seeder;
-use Modules\PkgBlog\App\Models\Article;
-
-class ArticleSeeder extends Seeder
-{
-    public function run()
+    public function test_guest_cannot_create_article()
     {
-        Article::create(['title' => 'Sample Article', 'content' => 'This is a sample article.']);
+        // Send a POST request without authentication
+        $response = $this->post(route('articles.store'), [
+            'title' => 'Guest Article',
+            'content' => 'Should not be created.',
+        ]);
+
+        // Assert that the user is redirected to the login page
+        $response->assertRedirect(route('login'));
+
+        // Ensure the article was not saved in the database
+        $this->assertDatabaseMissing('articles', ['title' => 'Guest Article']);
+    }
+
+    public function test_authenticated_user_cannot_create_article_with_invalid_data()
+    {
+        // Create a user
+        $user = User::create([
+            'name' => 'Test User',
+            'email' => 'testUser@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        // Assign a role to the user
+        $user->assignRole('editor');
+
+        // Send a POST request with missing fields (invalid data)
+        $response = $this->actingAs($user)->post(route('articles.store'), [
+            'title' => '', // Invalid title (empty)
+            'content' => '', // Invalid content (empty)
+            'category' => null, // Invalid category (null)
+            'tags' => [], // Invalid tags (empty array)
+        ]);
+
+        // Assert that validation errors are present for the required fields
+        $response->assertSessionHasErrors(['title', 'content', 'category', 'tags']);
     }
 }
 ```
 
-### **10. Run Migrations and Seed Data**
+### Explanation of Test Cases
 
-Run the migrations to create the `articles` table and optionally run the seeders to insert sample data:
+1. **`test_authenticated_user_can_create_article`**
+
+   - Creates a user.
+   - Authenticates the user and submits an article form.
+   - Checks if the article is stored in the database.
+   - Ensures a successful response (HTTP status 302 for redirect).
+
+2. **`test_guest_cannot_create_article`**
+
+   - Attempts to create an article without authentication.
+   - Ensures the user is redirected to the login page.
+   - Confirms the article was not stored in the database.
+
+3. **`test_article_creation_requires_validation`**
+   - Tries to submit an empty form while authenticated.
+   - Ensures validation errors are triggered.
+   - Confirms errors for missing `title` and `content` fields.
+
+## Running the Tests
+
+To execute your tests, run the following command:
 
 ```bash
-php artisan migrate
-php artisan db:seed --class=Modules\\PkgBlog\\Database\\Seeders\\ArticleSeeder
+php artisan test --filter=ArticleTest
 ```
 
-### **11. Access the Module**
-
-To access the routes and views of your module, navigate to `/blog` in your browser. You should be able to view the articles, create new ones, and interact with your module.
-
----
+This will run only the tests inside `ArticleTest.php`.
 
 ## Conclusion
 
-By following these steps, you have successfully set up a modular system in Laravel that organizes each feature into its own module. This will help you maintain a clean and scalable codebase as your application grows.
+This tutorial covered:
 
----
-
-### Key Instructions:
-
-- **Step 1:** Create the `modules` directory.
-- **Step 2:** Update `composer.json` to autoload modules.
-- **Step 3:** Create a module structure.
-- **Step 4:** Create a service provider for each module to load migrations, routes, and views.
-- **Step 5:** Define module-specific routes.
-- **Step 6:** Implement controllers and views for the module.
-- **Step 7:** Set up models and database migrations.
-- **Step 8:** Optionally, seed data for the module.
-- **Step 9:** Run migrations and seed data.
-- **Step 10:** Access your module in the browser.
+- How to set up and configure Laravel for testing.
+- Creating the `.env.testing` file and configuring a separate database for testing.
+- Writing feature tests for article creation.
+- Ensuring authentication, validation, and database assertions are working correctly.
